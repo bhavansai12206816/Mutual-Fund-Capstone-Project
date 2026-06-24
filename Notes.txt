@@ -1,0 +1,501 @@
+import requests
+import pandas as pd
+
+# API URL
+url = "https://api.mfapi.in/mf/125497"
+
+# GET request
+response = requests.get(url)
+
+# convert JSON
+data = response.json()
+
+# print fund name
+print("Fund Name:")
+print(data["meta"]["scheme_name"])
+
+# NAV history
+nav_data = data["data"]
+
+# convert to dataframe
+df = pd.DataFrame(nav_data)
+
+print("\nFirst 5 NAV Records:")
+print(df.head())
+
+# save csv
+df.to_csv("data/raw/hdfc_live_nav.csv", index=False)
+
+print("\nSaved successfully")
+
+
+============================================================
+DAY 1 DATA QUALITY SUMMARY REPORT
+============================================================
+
+Project Name:
+Mutual Fund Analytics Platform
+
+Organization:
+Bluestock Fintech Pvt Ltd
+
+Project Type:
+Data Engineering + ETL Pipeline + Analytics Dashboard
+
+Date:
+Day 1 Project Setup and Data Ingestion
+
+Prepared By:
+[Your Name]
+
+============================================================
+1. PROJECT OBJECTIVE
+============================================================
+
+The objective of Day 1 was to set up the project environment,
+ingest all provided raw datasets, validate dataset quality,
+fetch live NAV data from external API sources, verify scheme
+codes, and prepare data for further ETL processing.
+
+The following tasks were completed:
+
+1. Created project folder structure
+2. Installed required Python dependencies
+3. Loaded all 10 CSV datasets using Pandas
+4. Performed initial data quality checks
+5. Fetched live NAV data using mfapi.in API
+6. Validated AMFI scheme codes
+7. Prepared datasets for next ETL stage
+
+============================================================
+2. DATASETS INGESTED
+============================================================
+
+A total of 10 CSV datasets were provided and loaded successfully.
+
+Files processed:
+
+1. 01_fund_master.csv
+2. 02_nav_history.csv
+3. 03_aum_by_fund_house.csv
+4. 04_monthly_sip_inflows.csv
+5. 05_category_inflows.csv
+6. 06_industry_folio_count.csv
+7. 07_scheme_performance.csv
+8. 08_investor_transactions.csv
+9. 09_portfolio_holdings.csv
+10. 10_benchmark_indices.csv
+
+Total datasets loaded successfully = 10
+
+Status:
+PASS
+
+============================================================
+3. DATASET SHAPE VALIDATION
+============================================================
+
+Each dataset was loaded using Pandas and validated using
+DataFrame shape function.
+
+Dataset Summary:
+
+01_fund_master.csv
+Rows = 40
+Columns = 15
+
+02_nav_history.csv
+Rows = 46000
+Columns = 3
+
+03_aum_by_fund_house.csv
+Rows = 90
+Columns = 5
+
+04_monthly_sip_inflows.csv
+Rows = 48
+Columns = 6
+
+05_category_inflows.csv
+Rows = 144
+Columns = 3
+
+06_industry_folio_count.csv
+Rows = 21
+Columns = 6
+
+07_scheme_performance.csv
+Rows = 40
+Columns = 19
+
+08_investor_transactions.csv
+Rows = 32778
+Columns = 13
+
+09_portfolio_holdings.csv
+Rows = 322
+Columns = 8
+
+10_benchmark_indices.csv
+Rows = 8050
+Columns = 3
+
+Observation:
+
+All datasets contain valid records.
+No dataset is empty.
+
+Status:
+PASS
+
+============================================================
+4. DATA TYPE VALIDATION
+============================================================
+
+Each dataset was checked using Pandas dtypes function.
+
+Validation performed to confirm whether columns contain
+appropriate data types.
+
+Correct Data Types Found:
+
+amfi_code = int64
+amount_inr = int64
+nav = float64
+expense_ratio_pct = float64
+aum_crore = int64
+weight_pct = float64
+
+Datatype Issues Identified:
+
+Several date columns are stored as string format instead
+of datetime format.
+
+Affected columns:
+
+launch_date
+date
+month
+transaction_date
+portfolio_date
+
+Problem:
+
+String format dates cannot be directly used for:
+
+1. Sorting
+2. Date filtering
+3. Time series analysis
+4. Monthly aggregation
+5. Trend analysis
+
+Recommended Fix:
+
+Convert all date columns using Pandas datetime conversion.
+
+Example:
+
+pd.to_datetime()
+
+Status:
+ISSUE IDENTIFIED
+
+============================================================
+5. MISSING VALUE ANALYSIS
+============================================================
+
+All datasets were checked using:
+
+df.isnull().sum()
+
+Observation:
+
+Only one dataset contains missing values.
+
+Dataset:
+
+04_monthly_sip_inflows.csv
+
+Affected Column:
+
+yoy_growth_pct
+
+Missing Values Found:
+
+12
+
+Reason:
+
+The Year-over-Year growth percentage compares current year
+values with previous year values.
+
+Since first year records do not have previous year historical
+data, the first 12 rows contain null values.
+
+Analysis:
+
+This is expected business logic and not considered data corruption.
+
+Recommended Fix:
+
+Either:
+
+1. Keep null values
+2. Replace with 0
+3. Ignore during analysis
+
+Status:
+MINOR ISSUE FOUND
+
+============================================================
+6. DUPLICATE RECORD CHECK
+============================================================
+
+Duplicate validation was performed using:
+
+df.duplicated().sum()
+
+Results:
+
+01_fund_master.csv = 0 duplicates
+02_nav_history.csv = 0 duplicates
+03_aum_by_fund_house.csv = 0 duplicates
+04_monthly_sip_inflows.csv = 0 duplicates
+05_category_inflows.csv = 0 duplicates
+06_industry_folio_count.csv = 0 duplicates
+07_scheme_performance.csv = 0 duplicates
+08_investor_transactions.csv = 0 duplicates
+09_portfolio_holdings.csv = 0 duplicates
+10_benchmark_indices.csv = 0 duplicates
+
+Observation:
+
+No duplicate records found in any dataset.
+
+Importance:
+
+Duplicate records can cause:
+
+1. Incorrect aggregations
+2. Wrong financial calculations
+3. Double counting of transactions
+4. Incorrect dashboard reporting
+
+Status:
+PASS
+
+============================================================
+7. LOGICAL VALUE VALIDATION
+============================================================
+
+Financial columns were checked for impossible values.
+
+Validation Performed:
+
+NAV values
+Transaction Amount
+Expense Ratio
+AUM Values
+Portfolio Weights
+
+Observations:
+
+No invalid values detected.
+
+No negative NAV values found.
+
+No negative transaction amounts found.
+
+Expense ratio values fall within expected range.
+
+AUM values appear logically valid.
+
+Status:
+PASS
+
+============================================================
+8. CATEGORY CONSISTENCY VALIDATION
+============================================================
+
+Categorical columns were validated for consistency.
+
+Columns checked:
+
+category
+sub_category
+risk_category
+transaction_type
+payment_mode
+
+Expected issues:
+
+Equity / equity / EQUITY inconsistency
+
+Observed:
+
+No inconsistent labels found.
+
+All categorical values are standardized.
+
+Example:
+
+Risk Categories:
+
+Low
+Moderate
+High
+Very High
+
+Transaction Types:
+
+SIP
+Lumpsum
+Redemption
+
+Status:
+PASS
+
+============================================================
+9. AMFI CODE VALIDATION
+============================================================
+
+Validation objective:
+
+Confirm whether all AMFI scheme codes present in fund_master
+exist inside nav_history dataset.
+
+Validation logic used:
+
+Compare:
+
+fund_master.amfi_code
+
+against
+
+nav_history.amfi_code
+
+Python logic used:
+
+master_codes = set(master["amfi_code"])
+
+nav_codes = set(nav["amfi_code"])
+
+missing = master_codes - nav_codes
+
+Output:
+
+Missing Codes = set()
+
+Total Missing = 0
+
+Observation:
+
+All scheme codes are valid.
+
+No missing references detected.
+
+Importance:
+
+This ensures proper joins between datasets.
+
+Example future join:
+
+fund_master + nav_history
+
+Status:
+PASS
+
+============================================================
+10. API DATA INGESTION VALIDATION
+============================================================
+
+External API used:
+
+https://api.mfapi.in/mf/125497
+
+Task:
+
+Fetch live NAV data using REST API.
+
+Steps completed:
+
+1. Sent GET request using Python requests library
+2. Received JSON response
+3. Parsed JSON response successfully
+4. Extracted NAV history data
+5. Converted JSON into Pandas DataFrame
+6. Saved output as CSV file
+
+Output File Created:
+
+hdfc_live_nav.csv
+
+Additional API ingestion completed for 5 schemes.
+
+Schemes processed:
+
+SBI Bluechip
+ICICI Bluechip
+Nippon Large Cap
+Axis Bluechip
+Kotak Bluechip
+
+Status:
+PASS
+
+============================================================
+11. OVERALL DATA QUALITY RESULT
+============================================================
+
+Summary:
+
+Datasets Loaded Successfully = 10
+
+Duplicate Issues = 0
+
+Missing Value Issues = 1
+
+Datatype Issues = Date columns require conversion
+
+AMFI Validation = Successful
+
+API Data Ingestion = Successful
+
+Overall Quality Assessment:
+
+Dataset quality is acceptable.
+
+Data is suitable for ETL processing.
+
+Minor cleaning required for date conversion and missing values.
+
+Ready for Day 2 processing.
+
+============================================================
+12. DAY 1 FINAL STATUS
+============================================================
+
+Day 1 Tasks Completed Successfully
+
+Completed Deliverables:
+
+1. Project folder structure created
+2. requirements.txt generated
+3. data_ingestion.py completed
+4. live_nav_fetch.py completed
+5. 10 CSV datasets ingested
+6. Data quality validation completed
+7. API integration completed
+8. AMFI validation completed
+
+Final Status:
+
+DAY 1 SUCCESSFULLY COMPLETED
+
+Ready for Day 2:
+
+Data Cleaning + SQL Database Design
+
+============================================================
+END OF REPORT
+============================================================
